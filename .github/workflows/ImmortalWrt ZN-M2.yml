@@ -17,7 +17,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: 24.10
+  REPO_BRANCH: openwrt-24.10
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
@@ -319,8 +319,8 @@ EOF
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body: |
-          ImmortalWrt ZN-M2 固件
-          - 基于官方 immortalwrt master 分支构建
+          ImmortalWrt ZN-M2 固件 (基于 openwrt-24.10 分支)
+          - 基于官方 immortalwrt openwrt-24.10 分支构建
           - 包含 iStore 应用商店
           - 包含 DDNS 动态域名解析
           - 包含阿里云 DDNS 脚本支持
