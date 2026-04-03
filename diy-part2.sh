@@ -378,16 +378,11 @@ fi
 # Customizations
 # ============================================================
 
-# Modify default IP
-sed -i 's/192.168.1.1/192.168.20.1/g' package/base-files/files/bin/config_generate
+# Modify default IP to 192.168.1.1
+sed -i 's/192.168.1.1/192.168.1.1/g' package/base-files/files/bin/config_generate
 
-# Set default password to 'password'
-sed -i '/^root:/c\root:$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.:0:0:99999:7:::' package/base-files/files/etc/shadow
-
-# Argon theme
-rm -rf feeds/luci/themes/luci-theme-argon
-git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
-git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config package/luci-app-argon-config
+# Set empty password (remove password)
+sed -i '/^root:/c\root::0:0:99999:7:::' package/base-files/files/etc/shadow
 
 # Fix Makefile paths for external packages
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/luci.mk/$(TOPDIR)\/feeds\/luci\/luci.mk/g' {}
