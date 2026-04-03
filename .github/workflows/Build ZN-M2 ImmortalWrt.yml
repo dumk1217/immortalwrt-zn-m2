@@ -179,11 +179,12 @@ jobs:
         MK_EOF
         
         # ============================================================
-        # 3. 注册 WiFi 固件到 ipq-wifi Makefile
+        # 3. 注册 WiFi 固件到 ipq-wifi Makefile（修复 sed 语法）
         # ============================================================
         WIFI_MK="package/firmware/ipq-wifi/Makefile"
         if ! grep -q "zn_m2" "$WIFI_MK"; then
-            sed -i '/^[[:space:]]*zyxel_scr50axe[[:space:]]*$/s/[[:space:]]*$/ \\/' "$WIFI_MK"
+            # 使用更安全的模式，避免 [[:space:]] 字符类问题
+            sed -i '/zyxel_scr50axe *$/s/ *$/ \\/' "$WIFI_MK"
             sed -i '/zyxel_scr50axe.*\\/a\\\tzn_m2' "$WIFI_MK"
             sed -i '/generate-ipq-wifi-package,zyxel_scr50axe/a\$(eval $(call generate-ipq-wifi-package,zn_m2,ZN M2))' "$WIFI_MK"
         fi
@@ -217,11 +218,10 @@ jobs:
         fi
         
         # ============================================================
-        # 7. 添加 WiFi 校准数据热插拔脚本（修复 sed 语法）
+        # 7. 添加 WiFi 校准数据热插拔脚本
         # ============================================================
         CALDATA_FILE="target/linux/qualcommax/ipq60xx/base-files/etc/hotplug.d/firmware/11-ath11k-caldata"
         if [ -f "$CALDATA_FILE" ] && ! grep -q "zn,m2" "$CALDATA_FILE"; then
-            # 使用 a 命令追加，避免大括号转义问题
             sed -i '/qihoo,360v6)/a\\\tzn,m2)\n\t\tcaldata_extract "0:art" 0x1000 0x10000\n\t\t;;' "$CALDATA_FILE"
         fi
         
