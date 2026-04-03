@@ -17,7 +17,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: master
+  REPO_BRANCH: openwrt-24.10
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
@@ -110,7 +110,7 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    # 配置 iStore 和 DDNS 相关选项
+    # 配置软件包选项（iStore、DDNS 和 WiFi 相关）
     - name: 配置软件包选项
       run: |
         cd openwrt
@@ -131,8 +131,131 @@ jobs:
         echo "CONFIG_PACKAGE_curl=y" >> .config
         echo "CONFIG_PACKAGE_openssl-util=y" >> .config
         
-        # 可选：添加阿里云 CLI 工具（如果需要）
-        # echo "CONFIG_PACKAGE_aliyun-cli=y" >> .config
+        # WiFi 基础配置
+        echo "CONFIG_PACKAGE_kmod-cfg80211=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-mac80211=y" >> .config
+        echo "CONFIG_PACKAGE_hostapd=y" >> .config
+        echo "CONFIG_PACKAGE_hostapd-common=y" >> .config
+        echo "CONFIG_PACKAGE_wpa-supplicant=y" >> .config
+        echo "CONFIG_PACKAGE_iw=y" >> .config
+        echo "CONFIG_PACKAGE_iwinfo=y" >> .config
+        
+        # WiFi 加密和认证
+        echo "CONFIG_PACKAGE_wpad-basic=y" >> .config
+        echo "CONFIG_PACKAGE_wpad-basic-openssl=y" >> .config
+        
+        # WiFi 管理工具
+        echo "CONFIG_PACKAGE_luci-app-wifischedule=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-wifischedule-zh-cn=y" >> .config
+        
+        # 无线网卡驱动（高通/ath10k - ZN-M2 常见配置）
+        echo "CONFIG_PACKAGE_kmod-ath=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ath10k=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ath10k-ct=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-ath9k=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca4019=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca6174=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca9377=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca9887=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca9888=y" >> .config
+        echo "CONFIG_PACKAGE_ath10k-firmware-qca9984=y" >> .config
+        
+        # 其他无线驱动（可选）
+        echo "CONFIG_PACKAGE_kootnet=$(cat /dev/null)" >> .config
+        
+        # WiFi 扫描和分析工具
+        echo "CONFIG_PACKAGE_wavemon=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-wifimap=y" >> .config
+        
+        # 无线中继功能
+        echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
+        
+        # 可选：添加 WiFi 调试工具
+        echo "CONFIG_PACKAGE_tcpdump=y" >> .config
+        echo "CONFIG_PACKAGE_tcpdump-mini=y" >> .config
+
+    # 创建 WiFi 配置优化脚本（可选）
+    - name: 优化 WiFi 配置
+      run: |
+        cd openwrt
+        # 创建 files 目录用于预置配置文件
+        mkdir -p files/etc/config
+        
+        # 优化无线配置参数
+        cat > files/etc/config/wireless.optimize << 'EOF'
+# WiFi 优化配置建议
+# 将以下配置添加到 /etc/config/wireless 中
+
+# 2.4GHz 优化配置
+config wifi-device 'radio0'
+        option type 'mac80211'
+        option channel '1'  # 可选 1/6/11
+        option hwmode '11g'
+        option htmode 'HT40'
+        option country 'CN'
+        option legacy_rates '0'
+        option txpower '20'
+        option cell_density '0'
+
+# 5GHz 优化配置
+config wifi-device 'radio1'
+        option type 'mac80211'
+        option channel '149'  # 36-165 之间选择
+        option hwmode '11a'
+        option htmode 'VHT80'
+        option country 'CN'
+        option legacy_rates '0'
+        option txpower '20'
+        option cell_density '0'
+
+# 安全配置建议
+# WPA3 加密（需要设备支持）
+config wifi-iface 'default_radio0'
+        option device 'radio0'
+        option network 'lan'
+        option mode 'ap'
+        option ssid 'OpenWrt_2.4G'
+        option encryption 'sae-mixed'  # WPA2/WPA3 混合模式
+        option key 'your_password_here'
+
+config wifi-iface 'default_radio1'
+        option device 'radio1'
+        option network 'lan'
+        option mode 'ap'
+        option ssid 'OpenWrt_5G'
+        option encryption 'sae-mixed'
+        option key 'your_password_here'
+EOF
+
+        # 创建 WiFi 启动优化脚本
+        mkdir -p files/etc/init.d
+        cat > files/etc/init.d/wifi_optimize << 'EOF'
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+start() {
+    # 优化 WiFi 性能参数
+    echo "Configuring WiFi optimizations..."
+    
+    # 禁用节能模式（提高性能）
+    for dir in /sys/kernel/debug/ieee80211/*; do
+        [ -f "$dir/ath10k/recv_amsdu" ] && echo 1 > "$dir/ath10k/recv_amsdu"
+        [ -f "$dir/ath10k/recv_ampdu" ] && echo 1 > "$dir/ath10k/recv_ampdu"
+    done
+    
+    # 重启无线网络
+    wifi restart
+    
+    logger -t "wifi_optimize" "WiFi optimization completed"
+}
+
+stop() {
+    echo "Resetting WiFi optimizations..."
+}
+EOF
+        chmod +x files/etc/init.d/wifi_optimize
 
     - name: 下载软件包
       id: package
@@ -202,6 +325,10 @@ jobs:
           - 包含 DDNS 动态域名解析
           - 包含阿里云 DDNS 脚本支持
           - 包含 luci-app-ddns 中文界面
+          - 包含完整 WiFi 驱动支持（高通 ath10k/ath9k 等）
+          - 包含 WiFi 管理工具和优化脚本
+          - 支持 2.4GHz 和 5GHz 双频
+          - 支持 WPA3 加密
         files: ${{ env.FIRMWARE }}/*
 
     - name: 删除工作流运行记录
