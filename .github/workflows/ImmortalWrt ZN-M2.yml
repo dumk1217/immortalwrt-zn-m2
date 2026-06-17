@@ -161,7 +161,7 @@ jobs:
         echo "CONFIG_PACKAGE_ath10k-firmware-qca9984=y" >> .config
         
         # 其他无线驱动（可选）
-        echo "CONFIG_PACKAGE_kootnet=$(cat /dev/null)" >> .config
+        #echo "CONFIG_PACKAGE_kootnet=$(cat /dev/null)" >> .config
         
         # WiFi 扫描和分析工具
         echo "CONFIG_PACKAGE_wavemon=y" >> .config
