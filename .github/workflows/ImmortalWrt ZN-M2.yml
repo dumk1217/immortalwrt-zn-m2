@@ -161,7 +161,7 @@ jobs:
         echo "CONFIG_PACKAGE_ath10k-firmware-qca9984=y" >> .config
         
         # 其他无线驱动（可选）
-        #echo "CONFIG_PACKAGE_kootnet=$(cat /dev/null)" >> .config
+        echo "CONFIG_PACKAGE_kootnet=$(cat /dev/null)" >> .config
         
         # WiFi 扫描和分析工具
         echo "CONFIG_PACKAGE_wavemon=y" >> .config
@@ -189,7 +189,7 @@ jobs:
 # 2.4GHz 优化配置
 config wifi-device 'radio0'
         option type 'mac80211'
-        option channel '1'  # 可选 1/6/11
+        option channel '1'
         option hwmode '11g'
         option htmode 'HT40'
         option country 'CN'
@@ -200,7 +200,7 @@ config wifi-device 'radio0'
 # 5GHz 优化配置
 config wifi-device 'radio1'
         option type 'mac80211'
-        option channel '149'  # 36-165 之间选择
+        option channel '149'
         option hwmode '11a'
         option htmode 'VHT80'
         option country 'CN'
@@ -215,7 +215,7 @@ config wifi-iface 'default_radio0'
         option network 'lan'
         option mode 'ap'
         option ssid 'OpenWrt_2.4G'
-        option encryption 'sae-mixed'  # WPA2/WPA3 混合模式
+        option encryption 'sae-mixed'
         option key 'your_password_here'
 
 config wifi-iface 'default_radio1'
